@@ -1,0 +1,81 @@
+# ── CONFIGURACIÓN DE NAVEGACIÓN ─────────────────────────────────────────────
+# Este archivo contiene waypoints y posiciones de marcadores
+
+# ── PARÁMETROS DE CONTROL ───────────────────────────────────────────────────
+linear_speed: 0.15      # Velocidad lineal máxima (m/s)
+angular_speed: 1.5      # Velocidad angular máxima (rad/s)
+distance_tolerance: 0.03  # Distancia para considerar waypoint alcanzado (m)
+angle_tolerance: 0.03     # Ángulo para considerar alineación correcta (rad)
+
+# ── WAYPOINTS ──────────────────────────────────────────────────────────────
+# Lista de puntos (x, y) que el robot debe seguir
+# Coordenadas en metros desde el origen (donde inicia el robot)
+
+waypoints:
+   - [1.20, 0.0]
+   - [1.20, -1.20]
+   - [0.0, -1.20]
+   - [0.0, 0.0]
+   - [1.20, 0.0]
+   - [1.20, -1.20]
+   - [0.0, -1.20]
+   - [0.0, 0.0]
+   - [1.20, 0.0]
+   - [1.20, -1.20]
+   - [0.0, -1.20]
+   - [0.0, 0.0]
+   - [1.20, 0.0]
+   - [1.20, -1.20]
+   - [0.0, -1.20]
+   - [0.0, 0.0]
+   - [1.20, 0.0]
+   - [1.20, -1.20]
+   - [0.0, -1.20]
+   - [0.0, 0.0]
+   - [1.20, 0.0]
+   - [1.20, -1.20]
+   - [0.0, -1.20]
+   - [0.0, 0.0]
+   
+#waypoints:
+  #- [1.3, 0.0]    
+  #- [1.3, -0.8]    
+  #- [1.9, -0.8]
+  #- [1.9, 0.4]
+  #- [0, 0.4]
+  #- [0, 0]
+
+# ── POSICIONES DE MARCADORES ────────────────────────────────────────────────
+# ID del marcador -> [x, y, theta] en metros y radianes
+# Theta = 0 significa mirando hacia +X (adelante)
+markers:
+  493: [1.50, 0.0, 0.0]
+  494: [-0.3, -1.20, 3.14159265]  
+
+# ── EJEMPLOS DE TRAYECTORIAS ────────────────────────────────────────────────
+# Para cambiar trayectoria, solo modifica la lista 'waypoints' arriba
+#
+# Trayectoria cuadrada 2x2m:
+
+#waypoints:
+   #- [1.0, 0.0]
+   #- [1.0, 1.0]
+   #- [0.0, 1.0]
+   #- [0.0, 0.0]
+
+   
+   
+   
+
+
+#
+# Trayectoria triangular:
+# waypoints:
+#   - [2.0, 0.0]
+#   - [1.0, 1.73]
+#   - [0.0, 0.0]
+#
+# Trayectoria en L:
+# waypoints:
+#   - [3.0, 0.0]
+#   - [3.0, 2.0]
