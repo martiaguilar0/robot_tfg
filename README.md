@@ -148,7 +148,7 @@ robot_tfg/
     ├── config_b/
     │   └── ...
     └── config_c/
-        └── ...    (incluye err_nav_config_c.png)
+        └── ...
 ```
 
 ---
