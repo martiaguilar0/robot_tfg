@@ -1,6 +1,4 @@
-# Robot Móvil Diferencial con Localización Asistida por Visión
-
-**Trabajo de Fin de Grado (TFG) — Navegación autónoma mediante detección de marcadores ArUco y fusión sensorial con Filtro de Kalman Extendido**
+#Trabajo de Fin de Grado: DISEÑO E IMPLEMENTACIÓN DE UN ROBOT MÓVIL CON NAVEGACIÓN AUTÓNOMA BASADA EN FUSIÓN INERCIAL, ODOMÉTRICA Y VISIÓN ARTIFICIAL
 
 ---
 
