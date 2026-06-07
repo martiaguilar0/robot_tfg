@@ -1,4 +1,8 @@
-**Trabajo de Fin de Grado: DISEÑO E IMPLEMENTACIÓN DE UN ROBOT MÓVIL CON NAVEGACIÓN AUTÓNOMA BASADA EN FUSIÓN INERCIAL, ODOMÉTRICA Y VISIÓN ARTIFICIAL**
+# Robot Móvil Diferencial con Localización Asistida por Visión
+
+**Trabajo de Fin de Grado (TFG) — Navegación autónoma mediante detección de marcadores ArUco y fusión sensorial con Filtro de Kalman Extendido**
+
+Repositorio: [github.com/martiaguilar0/robot_tfg](https://github.com/martiaguilar0/robot_tfg)
 
 ---
 
@@ -37,24 +41,21 @@ La comunicación entre capas se realiza por UART a 460800 baudios.
 
 ## Arquitectura del sistema
 
-El sistema se organiza en dos capas que se comunican por UART a 460800 baudios.
+El sistema se divide en dos capas que se comunican por UART a 460800 baudios.
 
-**Capa de bajo nivel (STM32F401):** gestiona el hardware en tiempo real. Lee los encoders de cuadratura de ambas ruedas y los datos de la IMU ICM-20948 a ~102 Hz, ejecuta el control PID de los motores a 1 kHz, y empaqueta toda la telemetría para enviarla por UART a la Jetson.
+**Capa de bajo nivel — STM32F401**
 
-**Capa de alto nivel (NVIDIA Jetson):** ejecuta el stack ROS2 completo. El nodo `stm32_bridge` recibe la telemetría serie y la publica como topics `/encoders/ticks` e `/imu/raw`. A partir de los ticks, el nodo de odometría calcula la pose incremental (`/odom`). La cámara CSI alimenta al nodo de visión, que detecta marcadores ArUco y genera correcciones de pose absolutas (`/vision/pose`). El **EKF** fusiona las tres fuentes (odometría, IMU y visión) para producir una estimación filtrada de estado `[x, y, θ, v_lin, v_ang]` en `/odometry/filtered`. Finalmente, el nodo de navegación consume esa estimación para generar comandos `cmd_vel` hacia los waypoints configurados, que la cinemática inversa convierte en referencias de velocidad para cada motor.
-### Flujo de datos
+Gestiona el hardware en tiempo real: lee los encoders de cuadratura y la IMU ICM-20948 a ~102 Hz, ejecuta el control PID de motores a 1 kHz y empaqueta la telemetría para enviarla a la Jetson.
 
-**Camino de control:**
-```
-/cmd_vel → cinemática inversa → /motor_speed_target → stm32_bridge → UART → PID STM32
-```
+**Capa de alto nivel — NVIDIA Jetson (ROS2)**
 
-**Camino de sensado:**
-```
-STM32 → UART → stm32_bridge → /encoders/ticks → odometría → /odom ──┐
-                             → /imu/raw ────────────────────────────┤
-Cámara → vision_localization → /vision/pose ───────────────────────┴→ EKF → /odometry/filtered → navegación
-```
+Recibe la telemetría serie y la distribuye por topics. Tres fuentes de información convergen en el EKF:
+
+- Encoders → odometría → `/odom` → **EKF**
+- IMU → `/imu/raw` → **EKF**
+- Cámara CSI → detección ArUco → `/vision/pose` → **EKF**
+
+El EKF produce una estimación filtrada del estado `[x, y, θ, v_lin, v_ang]` en `/odometry/filtered`, que el nodo de navegación usa para generar comandos de velocidad (`/cmd_vel`) hacia los waypoints. La cinemática inversa convierte esos comandos en referencias de velocidad para cada motor, cerrando el lazo de control.
 
 ---
 
@@ -125,15 +126,15 @@ robot_tfg/
 │           └── msg/
 │               └── EncoderTicks.msg # header, enc_l (int32), enc_r (int32)
 │
-├── resources/                       # Herramientas de calibración y análisis
+├── resources/                       # Scripts de calibración y análisis de resultados
 │   ├── calibration/
 │   │   ├── vision/
-│   │   │   ├── vision_calibration_results.py   # Script de calibración con tablero de ajedrez
+│   │   │   ├── vision_calibration_results.py   # Calibración de cámara con tablero de ajedrez
 │   │   │   ├── accuracy_check/                 # Precisión de detección a 50/100 cm
 │   │   │   └── images/                         # 20 imágenes de calibración (000–019.jpg)
-│   │   └── gyro/
-│   │       ├── gyro_calibration.ino            # Sketch Arduino para bias del giróscopo
-│   │       └── gyro_analysis.py                # Script de cálculo del bias
+│   │   └── gyro/                               # Scripts de calibración de la IMU
+│   │       ├── gyro_calibration.ino            # Sketch Arduino para adquisición del bias
+│   │       └── gyro_analysis.py                # Análisis estadístico del giróscopo
 │   └── results_analysis/
 │       ├── ground_truth_tracker.py             # Extrae trayectoria de vídeo cenital
 │       ├── plot_trajectories.py                # Gráficas ground truth vs EKF
@@ -457,3 +458,4 @@ Restricciones de medición:
 - Covarianza de la actualización de pose: derivada de la varianza de las 10 muestras
 
 ---
+
