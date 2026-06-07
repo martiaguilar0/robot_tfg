@@ -37,37 +37,11 @@ La comunicación entre capas se realiza por UART a 460800 baudios.
 
 ## Arquitectura del sistema
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        NVIDIA Jetson                           │
-│                                                                 │
-│   ┌──────────┐    ┌──────────────┐    ┌──────────────────────┐ │
-│   │Navegación│───▶│  Cinemática  │    │     Localización      │ │
-│   │Waypoints │    │   Inversa    │    │      por Visión       │ │
-│   └──────────┘    └──────┬───────┘    │   (ArUco/Cámara)     │ │
-│        ▲                 │            └──────────┬───────────┘ │
-│        │                 ▼                       │             │
-│   ┌────┴──────────────────────────────────────┐  │             │
-│   │        Filtro de Kalman Extendido (EKF)   │◀─┘             │
-│   │          [x, y, θ, v_lin, v_ang]          │                │
-│   └───────────────────────────────────────────┘                │
-│        ▲                 ▲                                      │
-│        │ /odom           │ /imu/raw                            │
-│   ┌────┴─────────────────┴──────────┐                          │
-│   │       Nodo Bridge STM32         │ ◀── /dev/ttyTHS1         │
-│   └─────────────────────────────────┘                          │
-└─────────────────────────────────────────────────────────────────┘
-                          │ UART 460800 baudios
-┌─────────────────────────┴───────────────────────────────────────┐
-│                    Firmware STM32F401                           │
-│                                                                 │
-│   ┌────────────┐   ┌────────────┐   ┌──────────────────────┐   │
-│   │  Encoders  │   │  ICM-20948 │   │  Control PID Motores  │   │
-│   │ (TIM2/TIM5)│   │  IMU/Mag   │   │   @ 1 kHz (TIM4)    │   │
-│   └────────────┘   └────────────┘   └──────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-```
+El sistema se organiza en dos capas que se comunican por UART a 460800 baudios.
 
+**Capa de bajo nivel (STM32F401):** gestiona el hardware en tiempo real. Lee los encoders de cuadratura de ambas ruedas y los datos de la IMU ICM-20948 a ~102 Hz, ejecuta el control PID de los motores a 1 kHz, y empaqueta toda la telemetría para enviarla por UART a la Jetson.
+
+**Capa de alto nivel (NVIDIA Jetson):** ejecuta el stack ROS2 completo. El nodo `stm32_bridge` recibe la telemetría serie y la publica como topics `/encoders/ticks` e `/imu/raw`. A partir de los ticks, el nodo de odometría calcula la pose incremental (`/odom`). La cámara CSI alimenta al nodo de visión, que detecta marcadores ArUco y genera correcciones de pose absolutas (`/vision/pose`). El **EKF** fusiona las tres fuentes (odometría, IMU y visión) para producir una estimación filtrada de estado `[x, y, θ, v_lin, v_ang]` en `/odometry/filtered`. Finalmente, el nodo de navegación consume esa estimación para generar comandos `cmd_vel` hacia los waypoints configurados, que la cinemática inversa convierte en referencias de velocidad para cada motor.
 ### Flujo de datos
 
 **Camino de control:**
@@ -483,7 +457,3 @@ Restricciones de medición:
 - Covarianza de la actualización de pose: derivada de la varianza de las 10 muestras
 
 ---
-
-## Licencia
-
-Este proyecto ha sido desarrollado como Trabajo de Fin de Grado. Se permite el uso académico con atribución.
