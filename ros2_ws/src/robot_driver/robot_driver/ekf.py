@@ -20,7 +20,7 @@ class EKFNode(Node):
         self.R_imu  = np.array([[9999]])
 
         self.latest_gyro_z = 0.0
-        self.last_time = self.get_clock().now()
+        self.last_mcu_ns = None
 
         self.last_vision_time    = 0.0
         self.VISION_MIN_INTERVAL = 0.5
@@ -37,10 +37,12 @@ class EKFNode(Node):
         return math.atan2(math.sin(angle), math.cos(angle))
 
     def timer_predict(self):
+        if self.last_mcu_ns is None:
+            return
         now = self.get_clock().now()
-        dt  = (now.nanoseconds - self.last_time.nanoseconds) / 1e9
-        self.last_time = now
-        if dt <= 0:
+        dt  = (self.last_mcu_ns - self._prev_mcu_ns) / 1e9
+        self._prev_mcu_ns = self.last_mcu_ns
+        if dt <= 0 or dt > 0.1:
             return
 
         x, y, th, v, w = self.state
@@ -59,6 +61,10 @@ class EKFNode(Node):
         self.publish_filtered(now.to_msg())
 
     def imu_cb(self, msg):
+        mcu_ns = rclpy.time.Time.from_msg(msg.header.stamp).nanoseconds
+        if self.last_mcu_ns is None:
+            self._prev_mcu_ns = mcu_ns
+        self.last_mcu_ns = mcu_ns
         self.latest_gyro_z = msg.angular_velocity.z
         z = np.array([self.latest_gyro_z])
         H = np.array([[0, 0, 0, 0, 1]])
